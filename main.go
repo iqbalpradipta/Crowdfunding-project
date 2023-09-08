@@ -1,9 +1,11 @@
 package main
 
 import (
+	"crowdproject/handler"
 	"crowdproject/users"
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,12 +20,13 @@ func main() {
 	userRepository := users.NewRepository(db)
 	userService := users.NewService(userRepository)
 
-	userInput := users.RegisterInput{}
-	userInput.Name = "Pak Ikebal"
-	userInput.Email = "cobacoba@gmail.com"
-	userInput.Occupation = "kang bensin"
-	userInput.Password = "123"
+	userHandler := handler.NewUserHandler(userService)
 
-	userService.RegisterUser(userInput)
+	router := gin.Default()
+	api := router.Group("/api/v1")
+
+	api.POST("/users", userHandler.RegisterUser)
+
+	router.Run()
 
 }
