@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crowdproject/helper"
 	"crowdproject/users"
 	"net/http"
 
@@ -20,14 +21,26 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "error request")
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.ApiResponse("Register Account Failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
 	}
 
-	user, err := h.userService.RegisterUser(input)
+	newUser, err := h.userService.RegisterUser(input)
+
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "error input")
+		response := helper.ApiResponse("Register Account Failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 
-	c.JSON(200, user)
+	formatter := users.FormatUser(newUser, "tokentokentoken")
+
+	response := helper.ApiResponse("Account has been register", http.StatusOK, "success", formatter)
+
+	c.JSON(200, response)
 
 }
