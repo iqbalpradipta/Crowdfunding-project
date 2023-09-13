@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crowdproject/auth"
 	"crowdproject/helper"
 	"crowdproject/users"
 	"fmt"
@@ -11,10 +12,11 @@ import (
 
 type userHandler struct {
 	userService users.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService users.Service) *userHandler {
-	return &userHandler{userService}
+func NewUserHandler(userService users.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -38,7 +40,14 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	formatter := users.FormatUser(newUser, "tokentokentoken")
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		response := helper.ApiResponse("Token Invalid", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := users.FormatUser(newUser, token)
 
 	response := helper.ApiResponse("Account has been register", http.StatusOK, "success", formatter)
 
@@ -68,7 +77,14 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	formatter := users.FormatUser(loggedInUser, "toknetokentokne")
+	token, err := h.authService.GenerateToken(loggedInUser.ID)
+	if err != nil {
+		response := helper.ApiResponse("Token Invalid", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := users.FormatUser(loggedInUser, token)
 	response := helper.ApiResponse("Successfuly login", http.StatusOK, "success", formatter)
 
 	c.JSON(200, response)

@@ -1,2 +1,3 @@
 images
 go.sum
+auth/secretKey.go
